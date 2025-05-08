@@ -7,11 +7,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils.data_preprocessing import load_data,clean_data, normalize_data
 from utils.visualization import plot_feature_importance, plot_correlation_heatmap, plot_feature_correlation
-from models.model import train_random_forest, evaluate_model
-from models.model import train_random_forest, grid_search_random_forest, evaluate_with_cross_validation, final_evaluation
+from models.model_backup import train_random_forest, evaluate_model
+from models.model_backup import train_random_forest, grid_search_random_forest, evaluate_with_cross_validation, final_evaluation
+from models.model import save_model
 
 #1. CARGAR Y EXPLORAR LOS DATOS
-data = load_data(r'C:\Users\LENOVO\PUMP_PREDICTOR\data\data.csv')
+data = load_data(r'C:\Users\Crishtian Paz\Desktop\Software GPTI\pump_predictor-ingrid\data\data.csv')
 
 #2: Limpiar los datos (si es necesario)
 data = clean_data(data)
@@ -44,4 +45,7 @@ evaluate_with_cross_validation(best_model, X_train, y_train)
 
     # Evaluar el modelo final sobre el conjunto de prueba
 final_evaluation(best_model, X_test, y_test)
+
+    # Guardar modelo entrenado
+save_model(best_model)
 
