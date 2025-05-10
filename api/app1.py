@@ -12,7 +12,7 @@ from models.model_backup import train_random_forest, grid_search_random_forest, 
 from models.model import save_model
 
 #1. CARGAR Y EXPLORAR LOS DATOS
-data = load_data(r'C:\Users\Crishtian Paz\Desktop\Software GPTI\pump_predictor-ingrid\data\data.csv')
+data = load_data(r'D:\UNT CICLOS\VII CICLO\GESTION DE TI\PROYECTO - I UNIDAD\PUMP_PREDICTOR\data\data.csv')
 
 #2: Limpiar los datos (si es necesario)
 data = clean_data(data)
@@ -40,12 +40,12 @@ model, X_train, X_test, y_train, y_test = train_random_forest(data)
 #9: Evaluar el model / Ajuste de hiperparametros
 best_model = grid_search_random_forest(X_train, y_train)
 
-    # Evaluar el modelo usando validación cruzada
+# Evaluar el modelo usando validación cruzada
 evaluate_with_cross_validation(best_model, X_train, y_train)
 
-    # Evaluar el modelo final sobre el conjunto de prueba
+# Evaluar el modelo final sobre el conjunto de prueba
 final_evaluation(best_model, X_test, y_test)
 
-    # Guardar modelo entrenado
+# Guardar modelo entrenado
 save_model(best_model)
 

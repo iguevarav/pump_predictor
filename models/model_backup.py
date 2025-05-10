@@ -75,6 +75,7 @@ def evaluate_with_cross_validation(best_model, X_train, y_train):
     cv_scores = cross_val_score(best_model, X_train, y_train, cv=5, scoring='accuracy')
     print("\nCross-validation results: ", cv_scores)
     print("Mean cross-validation score: ", cv_scores.mean())
+    
 
 def final_evaluation(best_model, X_test, y_test):
     # Predicciones finales
