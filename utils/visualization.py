@@ -1,58 +1,68 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor # CAMBIO: Regressor para RUL
+import numpy as np # Para np.corrcoef si es necesario, o solo df.corr()
 
-# Función para mostrar la correlacion de las características
-def plot_feature_correlation(data):
-    # Excluir la columna 'fail' para calcular la correlación solo entre las características
-    correlacion_matrix = data.drop(columns=['fail']).corr()  # Excluir 'fail'
-    
-    # Calcular la correlación de las características con 'fail'
-    fail_correlacion = data.corr()['fail'].drop('fail').sort_values(ascending=False)  # Excluye 'fail' de las correlaciones
+# Define las columnas que NO son características, pero son importantes para el contexto del dataset
+NON_FEATURE_COLS = ['unit_id', 'cycle', 'RUL'] # RUL será la variable objetivo
+
+# Función para mostrar la correlación de las características con la RUL
+def plot_feature_correlation(data_df):
+
+    if 'RUL' not in data_df.columns:
+        print("Error: La columna 'RUL' no se encuentra en el DataFrame. No se puede calcular la correlación con RUL.")
+        return
+
+    # Excluir las columnas que no son características ni la RUL
+    feature_cols = [col for col in data_df.columns if col not in NON_FEATURE_COLS]
+
+    # Calcular la correlación de las características con 'RUL'
+    rul_correlacion = data_df[feature_cols + ['RUL']].corr()['RUL'].drop('RUL').sort_values(ascending=False)
 
     # Visualización
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x=fail_correlacion.index, y=fail_correlacion.values)
-    plt.title('Correlación de las características vs Estado de la máquina')
+    plt.figure(figsize=(12, 7)) 
+    sns.barplot(x=rul_correlacion.index, y=rul_correlacion.values, palette='viridis') 
+    plt.title('Correlación de las Características con la RUL (Remaining Useful Life)')
     plt.xlabel('Características')
-    plt.ylabel('Correlación con Fail')
-    plt.xticks(rotation=45)
+    plt.ylabel('Coeficiente de Correlación (Pearson)')
+    plt.xticks(rotation=60, ha='right') 
     plt.tight_layout()
     plt.show()
 
 # Función para mostrar el mapa de calor de correlación entre las características
-def plot_correlation_heatmap(data):
-    # Excluir la columna 'fail' para que no se incluya en la matriz de correlación
-    corr_matrix = data.drop(columns=['fail']).corr()  # Excluir 'fail' de las características
+def plot_correlation_heatmap(data_df):
+
+    # Excluir las columnas que no son características (incluyendo RUL, si no quieres su correlación interna)
+    feature_cols = [col for col in data_df.columns if col not in NON_FEATURE_COLS]
+    
+    # Calcular la matriz de correlación solo entre las características
+    corr_matrix = data_df[feature_cols].corr()
     
     # Visualizar la correlación
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True, linewidths=0.5)
-    plt.title("Mapa de calor de correlación entre las características")
-    plt.xticks(rotation=45)
+    plt.figure(figsize=(14, 12)) 
+    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", square=True, linewidths=0.5, annot_kws={"size": 8}) # Ajustar tamaño de anotaciones
+    plt.title("Mapa de Calor de Correlación entre las Características")
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
     plt.tight_layout()
     plt.show()
 
-#Funcion para obtener la importancia de las caracteristicas
-def plot_feature_importance(data):
-    X = data.drop('fail', axis=1)  # Excluimos la columna 'fail' como objetivo
-    y = data['fail']  # Variable objetivo
+# Función para obtener y mostrar la importancia de las características
+def plot_feature_importance(model, X_train, y_train):
 
-    # Dividimos el conjunto de datos en entrenamiento y prueba
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Entrenar el modelo
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-
-    # Obtener la importancia de las características
-    importances = model.feature_importances_
+    if not hasattr(model, 'feature_importances_'):
+        print("El modelo proporcionado no tiene el atributo 'feature_importances_'.")
+        temp_model = RandomForestRegressor(n_estimators=100, random_state=42)
+        temp_model.fit(X_train, y_train)
+        importances = temp_model.feature_importances_
+        print("Advertencia: Se entrenó un modelo temporal para la importancia de características.")
+    else:
+        importances = model.feature_importances_
 
     # Crear un DataFrame para almacenar las características y su importancia
     importance_df = pd.DataFrame({
-        'Feature': X.columns,
+        'Feature': X_train.columns,
         'Importance': importances
     })
 
@@ -60,9 +70,10 @@ def plot_feature_importance(data):
     importance_df = importance_df.sort_values(by='Importance', ascending=False)
 
     # Crear gráfico de barras
-    plt.figure(figsize=(10, 6))
-    plt.barh(importance_df['Feature'], importance_df['Importance'])
-    plt.title("Importancia de las Características")
+    plt.figure(figsize=(12, 7)) # Ajustar tamaño
+    sns.barplot(x='Importance', y='Feature', data=importance_df, palette='magma') # Cambio a barh y paleta
+    plt.title("Importancia de las Características (Random Forest Regressor)")
     plt.xlabel("Importancia")
     plt.ylabel("Características")
+    plt.tight_layout()
     plt.show()
